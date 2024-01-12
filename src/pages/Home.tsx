@@ -10,7 +10,6 @@ const idb =
     (window as any).shimIndexedDB;
 
 const insertDataInIndexedDb = () => {
-    //check for support
     if (!idb) {
         console.log("This browser doesn't support IndexedDB");
         return;
