@@ -12,7 +12,6 @@ interface UserData {
 }
 
 const insertDataInIndexedDb = () => {
-  // check for support
   if (!idb) {
     console.log("This browser doesn't support IndexedDB");
     return;
@@ -31,7 +30,6 @@ const insertDataInIndexedDb = () => {
 
     if (!db.objectStoreNames.contains("userData")) {
       const objectStore = db.createObjectStore("userData", { keyPath: "id" });
-
       objectStore.createIndex("age", "age", {
         unique: false,
       });
@@ -62,7 +60,6 @@ interface AddUserProps {
 
 const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
   const subtitle = useRef<HTMLHeadingElement | null>(null);
-
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -81,7 +78,6 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     console.log(event.target, "sdsds");
-
     addToDb();
   };
 

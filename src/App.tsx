@@ -4,7 +4,6 @@ import Home from "./pages/Home";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Error from "./pages/Error";
 import About from "./pages/About";
-import AddUser from "./pages/AddUser";
 function App() {
   return (
     <>
@@ -14,7 +13,6 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/About" element={<About />} />
           <Route path="/Error" element={<Error />} />
-
         </Routes>
         <Toaster />
       </Router>

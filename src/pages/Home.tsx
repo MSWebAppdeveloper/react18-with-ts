@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AddUser from './AddUser';
+import EditUser from './EditUser';
 
 const idb =
     (window as any).indexedDB ||
@@ -14,9 +15,7 @@ const insertDataInIndexedDb = () => {
         console.log("This browser doesn't support IndexedDB");
         return;
     }
-
     const request = idb.open("test-db", 1);
-
     request.onerror = function (event: any) {
         console.error("An error occurred with IndexedDB");
         console.error(event);
@@ -25,10 +24,8 @@ const insertDataInIndexedDb = () => {
     request.onupgradeneeded = function (event: any) {
         console.log(event);
         const db = request.result;
-
         if (!db.objectStoreNames.contains("userData")) {
             const objectStore = db.createObjectStore("userData", { keyPath: "id" });
-
             objectStore.createIndex("age", "age", {
                 unique: false,
             });
@@ -37,75 +34,23 @@ const insertDataInIndexedDb = () => {
 
     request.onsuccess = function () {
         console.log("Database opened successfully");
-
-        // const db = request.result;
-
-        // var tx = db.transaction("userData", "readwrite");
-        // var userData = tx.objectStore("userData");
-
-        //   USER_DATA.forEach((item) => userData.add(item));
-
-        // return tx.complete;
     };
 };
 
 const Home: React.FC = () => {
     const [allUsers, setAllUsers] = useState<any[]>([]);
 
-    const [minAge, setMinAge] = useState<string>("");
-    const [maxAge, setMaxAge] = useState<string>("");
     const [isModal, setModal] = useState<boolean>(false)
+
+    const [editUserModal, setEditUserModal] = useState<boolean>(false);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
 
     useEffect(() => {
         insertDataInIndexedDb();
         getAllData();
-        // getAgeWiseData();
     }, [isModal]);
 
-    const getAgeWiseData = () => {
-        try {
-            const dbPromise = idb.open("test-db", 1);
-            const filteredRecords: any[] = [];
 
-            const keyRangeValue = IDBKeyRange.bound(
-                parseInt(minAge),
-                parseInt(maxAge),
-                false,
-                false
-            );
-
-            dbPromise.onsuccess = function () {
-                const db = dbPromise.result;
-
-                if (db.objectStoreNames.contains("userData")) {
-                    const transaction = db.transaction("userData", "readonly");
-                    const objectStore = transaction.objectStore("userData");
-
-                    const dataIdIndex = objectStore.index("age");
-                    dataIdIndex.openCursor(keyRangeValue).onsuccess = function (event: { target: { result: any; }; }) {
-                        const cursor = event.target.result;
-                        if (cursor) {
-                            if (cursor.value) {
-                                if (parseInt(cursor.value.age) > 0) {
-                                    console.log(cursor.value);
-                                    filteredRecords.push(cursor.value);
-                                }
-                            }
-
-                            cursor.continue();
-                        }
-                    };
-
-                    transaction.oncomplete = function (event: any) {
-                        setAllUsers(filteredRecords);
-                        db.close();
-                    };
-                }
-            };
-        } catch (error) {
-            console.log(error);
-        }
-    };
 
     const getAllData = () => {
         const dbPromise = idb.open("test-db", 1);
@@ -114,8 +59,7 @@ const Home: React.FC = () => {
 
             var tx = db.transaction("userData", "readonly");
             var userData = tx.objectStore("userData");
-            const users = userData.getAll();
-
+            const users = userData.getAll()
             users.onsuccess = (query: any) => {
                 setAllUsers(query.srcElement.result);
             };
@@ -131,7 +75,7 @@ const Home: React.FC = () => {
     const deleteSelected = (user: any) => {
         const dbPromise = idb.open("test-db", 1);
 
-        dbPromise.onsuccess = function () {
+        dbPromise.onsuccess = () => {
             const db = dbPromise.result;
             var tx = db.transaction("userData", "readwrite");
             var userData = tx.objectStore("userData");
@@ -147,18 +91,28 @@ const Home: React.FC = () => {
         };
     };
 
-    function closeModal() {
-        setModal(false);
-    }
+    const handleEditUserUpdate = () => {
+        getAllData();
+        setEditUserModal(false);
+    };
 
-
+    const openEditPopup = (user: any) => {
+        setSelectedUser(user);
+        setEditUserModal(true);
+    };
 
     return (
         <>
             {isModal && <AddUser isModal={isModal} handleClose={() => setModal(false)} />}
+            {editUserModal && (
+                <EditUser
+                    isModal={editUserModal}
+                    handleClose={() => setEditUserModal(false)}
+                    user={selectedUser}
+                    onUpdate={handleEditUserUpdate} />
+            )}
             <div className="row" style={{ padding: 100 }}>
                 <div className="col-md-6">
-
                     <table className="table table-bordered">
                         <thead>
                             <tr>
@@ -180,16 +134,7 @@ const Home: React.FC = () => {
                                         <td>
                                             <button
                                                 className="btn btn-success"
-                                                onClick={() => setModal(!isModal)}
-                                            // onClick={() => {
-                                            //     setAddUser(false);
-                                            //     setEditUser(true);
-                                            //     setSelectedUser(user);
-                                            //     setEmail(user?.email);
-                                            //     setAge(user?.age);
-                                            //     setFirstName(user?.firstName);
-                                            //     setLastName(user?.lastName);
-                                            // }}
+                                                onClick={() => openEditPopup(user)}
                                             >
                                                 Edit
                                             </button>{" "}
@@ -206,26 +151,15 @@ const Home: React.FC = () => {
                         </tbody>
                     </table>
                     <div>
-
                         <button
                             className="btn btn-primary float-end mb-2"
                             onClick={() => setModal(!isModal)}
-                        // onClick={() => {
-                        //     setFirstName("");
-                        //     setLastName("");
-                        //     setEmail("");
-                        //     setAge("");
-                        //     setEditUser(false);
-                        //     setAddUser(true);
-                        // }}
                         >
                             Add
                         </button>
                     </div>
                 </div>
-
             </div>
-
         </>
     );
 }
