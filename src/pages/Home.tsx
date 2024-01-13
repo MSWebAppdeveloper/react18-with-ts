@@ -111,7 +111,7 @@ const Home: React.FC = () => {
                     user={selectedUser}
                     onUpdate={handleEditUserUpdate} />
             )}
-            <div className="row" style={{ padding: 100 }}>
+            <div className="row justify-content-center" style={{ padding: 50 }}>
                 <div className="col-md-6">
                     <table className="table table-bordered">
                         <thead>

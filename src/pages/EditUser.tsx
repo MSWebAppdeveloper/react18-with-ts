@@ -103,7 +103,7 @@ const EditUser: React.FC<EditUserProps> = ({ isModal, handleClose, user, onUpdat
                 <div className="container-fluid">
                     <div className="card" style={{ padding: "10px" }}>
                         <form onSubmit={handleFormSubmit}>
-                            <h3>Add User</h3>
+                            <h3>Edit User Deatils</h3>
                             <div className="form-group">
                                 <label>First Name</label>
                                 <input
