@@ -2,46 +2,11 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import AddUser from './AddUser';
 import EditUser from './EditUser';
-
-const idb =
-    (window as any).indexedDB ||
-    (window as any).mozIndexedDB ||
-    (window as any).webkitIndexedDB ||
-    (window as any).msIndexedDB ||
-    (window as any).shimIndexedDB;
-
-const insertDataInIndexedDb = () => {
-    if (!idb) {
-        console.log("This browser doesn't support IndexedDB");
-        return;
-    }
-    const request = idb.open("test-db", 1);
-    request.onerror = function (event: any) {
-        console.error("An error occurred with IndexedDB");
-        console.error(event);
-    };
-
-    request.onupgradeneeded = function (event: any) {
-        console.log(event);
-        const db = request.result;
-        if (!db.objectStoreNames.contains("userData")) {
-            const objectStore = db.createObjectStore("userData", { keyPath: "id" });
-            objectStore.createIndex("age", "age", {
-                unique: false,
-            });
-        }
-    };
-
-    request.onsuccess = function () {
-        console.log("Database opened successfully");
-    };
-};
+import { deleteUserFromIndexedDb, getAllUsersFromIndexedDb, insertDataInIndexedDb } from '../services/dbService';
 
 const Home: React.FC = () => {
     const [allUsers, setAllUsers] = useState<any[]>([]);
-
     const [isModal, setModal] = useState<boolean>(false)
-
     const [editUserModal, setEditUserModal] = useState<boolean>(false);
     const [selectedUser, setSelectedUser] = useState<any>(null);
 
@@ -50,45 +15,25 @@ const Home: React.FC = () => {
         getAllData();
     }, [isModal]);
 
-
-
     const getAllData = () => {
-        const dbPromise = idb.open("test-db", 1);
-        dbPromise.onsuccess = () => {
-            const db = dbPromise.result;
-
-            var tx = db.transaction("userData", "readonly");
-            var userData = tx.objectStore("userData");
-            const users = userData.getAll()
-            users.onsuccess = (query: any) => {
-                setAllUsers(query.srcElement.result);
-            };
-
-            tx.oncomplete = function () {
-                db.close();
-            };
-        };
+        getAllUsersFromIndexedDb()
+            .then((users) => {
+                setAllUsers(users);
+            })
+            .catch((error) => {
+                console.error('Error fetching users:', error);
+            });
     };
 
-
-
     const deleteSelected = (user: any) => {
-        const dbPromise = idb.open("test-db", 1);
-
-        dbPromise.onsuccess = () => {
-            const db = dbPromise.result;
-            var tx = db.transaction("userData", "readwrite");
-            var userData = tx.objectStore("userData");
-            const deleteUser = userData.delete(user.id);
-
-            deleteUser.onsuccess = (query: any) => {
-                tx.oncomplete = function () {
-                    db.close();
-                };
-                toast.success("User Deleted!")
+        deleteUserFromIndexedDb(user.id)
+            .then(() => {
+                toast.success('User Deleted!');
                 getAllData();
-            };
-        };
+            })
+            .catch((error) => {
+                console.error('Error deleting user:', error);
+            });
     };
 
     const handleEditUserUpdate = () => {
@@ -111,7 +56,7 @@ const Home: React.FC = () => {
                     user={selectedUser}
                     onUpdate={handleEditUserUpdate} />
             )}
-            <div className="row justify-content-center" style={{ padding: 50 }}>
+            <div className="row justify-content-center text-center" style={{ padding: 50 }}>
                 <div className="col-md-6">
                     <table className="table table-bordered">
                         <thead>
@@ -133,13 +78,13 @@ const Home: React.FC = () => {
                                         <td>{user?.email}</td>
                                         <td>
                                             <button
-                                                className="btn btn-success"
+                                                className="btn btn-success btn-sm mr-2"
                                                 onClick={() => openEditPopup(user)}
                                             >
                                                 Edit
                                             </button>{" "}
                                             <button
-                                                className="btn btn-danger"
+                                                className="btn btn-danger btn-sm"
                                                 onClick={() => deleteSelected(user)}
                                             >
                                                 Delete

@@ -7,7 +7,6 @@ interface EditUserProps {
     handleClose: () => void;
     user: any;
     onUpdate: () => void;
-    selectedUser?: any; // Add this line to make selectedUser optional
 }
 
 const customStyles: Modal.Styles = {
@@ -43,14 +42,13 @@ const EditUser: React.FC<EditUserProps> = ({ isModal, handleClose, user, onUpdat
     };
 
     const addToDb = () => {
-
         if (editedUser.firstName && editedUser.lastName && editedUser.email) {
             const dbPromise = idb.open("test-db", 1);
 
             dbPromise.onsuccess = () => {
                 const db = dbPromise.result;
-                var tx = db.transaction("userData", "readwrite");
-                var userData = tx.objectStore("userData");
+                const tx = db.transaction("userData", "readwrite");
+                const userData = tx.objectStore("userData");
 
                 const updatedUser = {
                     id: user?.id,
@@ -97,6 +95,7 @@ const EditUser: React.FC<EditUserProps> = ({ isModal, handleClose, user, onUpdat
                 onAfterOpen={afterOpenModal}
                 onRequestClose={handleClose}
                 style={customStyles}
+                ariaHideApp={false}
                 contentLabel="Example Modal"
             >
                 <button className='btn btn-danger m-2 end' onClick={handleClose}>close</button>

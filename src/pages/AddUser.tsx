@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, FormEvent } from 'react';
 import Modal from 'react-modal';
 import { idb } from '../services/idbInterface';
 import toast from 'react-hot-toast';
-
+import { insertDataInIndexedDb } from '../services/dbService';
 interface UserData {
   id: string;
   firstName: string;
@@ -10,36 +10,6 @@ interface UserData {
   email: string;
   age: string;
 }
-
-const insertDataInIndexedDb = () => {
-  if (!idb) {
-    console.log("This browser doesn't support IndexedDB");
-    return;
-  }
-
-  const request = idb.open("test-db", 1);
-
-  request.onerror = function (event: any) {
-    console.error("An error occurred with IndexedDB");
-    console.error(event);
-  };
-
-  request.onupgradeneeded = function (event: any) {
-    console.log(event);
-    const db = request.result;
-
-    if (!db.objectStoreNames.contains("userData")) {
-      const objectStore = db.createObjectStore("userData", { keyPath: "id" });
-      objectStore.createIndex("age", "age", {
-        unique: false,
-      });
-    }
-  };
-
-  request.onsuccess = function () {
-    console.log("Database opened successfully");
-  };
-};
 
 const customStyles: Modal.Styles = {
   content: {
@@ -77,7 +47,6 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(event.target, "sdsds");
     addToDb();
   };
 
@@ -101,13 +70,13 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
         users.onsuccess = () => {
           tx.oncomplete = () => {
             db.close();
+            toast.success("User Added");
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setAge("");
+            handleClose();
           };
-          toast.success("User Added");
-          setFirstName("");
-          setLastName("");
-          setEmail("");
-          setAge("");
-          handleClose();
         };
       };
     } else {
@@ -129,6 +98,7 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
         onRequestClose={handleClose}
         style={customStyles}
         contentLabel="Example Modal"
+        ariaHideApp={false}
       >
         <button className='btn btn-danger m-2 end' onClick={handleClose}>close</button>
         <div className="container-fluid">
