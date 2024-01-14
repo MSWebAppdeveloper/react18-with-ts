@@ -1,14 +1,21 @@
-import { useEffect, useRef, useState, FormEvent } from 'react';
+import React, { useEffect, useRef, useState, FormEvent } from 'react';
 import Modal from 'react-modal';
-import { idb } from '../services/idbInterface';
 import toast from 'react-hot-toast';
-import { insertDataInIndexedDb } from '../services/dbService';
+import { idb } from '../services/idbInterface';
+
 interface UserData {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   age: string;
+}
+
+interface UserFormProps {
+  isModal: boolean;
+  handleClose: () => void;
+  user: any;
+  onUpdate: () => void;
 }
 
 const customStyles: Modal.Styles = {
@@ -23,21 +30,25 @@ const customStyles: Modal.Styles = {
   },
 };
 
-interface AddUserProps {
-  isModal: boolean;
-  handleClose: () => void;
-}
-
-const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
+const UserForm: React.FC<UserFormProps> = ({ isModal, handleClose, user, onUpdate }) => {
   const subtitle = useRef<HTMLHeadingElement | null>(null);
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [age, setAge] = useState<string>("");
+  const [formData, setFormData] = useState({
+    id: user?.id || '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    age: user?.age || '',
+    email: user?.email || '',
+  });
 
   useEffect(() => {
-    insertDataInIndexedDb();
-  }, []);
+    setFormData({
+      id: user?.id || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      age: user?.age || '',
+      email: user?.email || '',
+    });
+  }, [user]);
 
   function generateUniqueId(): string {
     const timestamp = new Date().getTime().toString(36);
@@ -53,28 +64,34 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
   const addToDb = () => {
     const dbPromise = idb.open("test-db", 1);
 
-    if (firstName && lastName && email) {
+    if (formData.firstName && formData.lastName && formData.email) {
       dbPromise.onsuccess = () => {
         const db = dbPromise.result;
         const tx = db.transaction("userData", "readwrite");
         const userData = tx.objectStore("userData");
 
-        const users = userData.put({
-          id: generateUniqueId(),
-          firstName,
-          lastName,
-          email,
-          age,
-        } as UserData);
+        const userToAdd: UserData = {
+          id: formData.id || generateUniqueId(),
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          age: formData.age,
+        };
+
+        const users = userData.put(userToAdd);
 
         users.onsuccess = () => {
           tx.oncomplete = () => {
             db.close();
-            toast.success("User Added");
-            setFirstName("");
-            setLastName("");
-            setEmail("");
-            setAge("");
+            toast.success(formData.id ? 'User Updated' : 'User Added');
+            setFormData({
+              id: '',
+              firstName: '',
+              lastName: '',
+              age: '',
+              email: '',
+            });
+            onUpdate();
             handleClose();
           };
         };
@@ -104,15 +121,15 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
         <div className="container-fluid">
           <div className="card" style={{ padding: "10px" }}>
             <form onSubmit={handleSubmit}>
-              <h3>Add User</h3>
+              <h3>{formData.id ? 'Edit User' : 'Add User'}</h3>
               <div className="form-group">
                 <label>First Name</label>
                 <input
                   type="text"
                   name="firstName"
                   className="form-control"
-                  onChange={(e) => setFirstName(e.target.value)}
-                  value={firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  value={formData.firstName}
                 />
               </div>
               <div className="form-group">
@@ -121,8 +138,8 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
                   type="text"
                   name="lastName"
                   className="form-control"
-                  onChange={(e) => setLastName(e.target.value)}
-                  value={lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  value={formData.lastName}
                 />
               </div>
               <div className="form-group">
@@ -131,8 +148,8 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
                   type="number"
                   name="age"
                   className="form-control"
-                  onChange={(e) => setAge(e.target.value)}
-                  value={age}
+                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                  value={formData.age}
                 />
               </div>
               <div className="form-group">
@@ -141,8 +158,8 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
                   type="email"
                   name="email"
                   className="form-control"
-                  onChange={(e) => setEmail(e.target.value)}
-                  value={email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  value={formData.email}
                 />
               </div>
               <div className="form-group">
@@ -150,7 +167,7 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
                   className="btn btn-primary mt-2"
                   type="submit"
                 >
-                  Add
+                  {formData.id ? 'Update' : 'Add'}
                 </button>
               </div>
             </form>
@@ -161,4 +178,4 @@ const AddUser: React.FC<AddUserProps> = ({ isModal, handleClose }) => {
   );
 };
 
-export default AddUser;
+export default UserForm;

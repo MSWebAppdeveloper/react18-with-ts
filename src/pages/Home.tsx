@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import AddUser from './AddUser';
-import EditUser from './EditUser';
 import { deleteUserFromIndexedDb, getAllUsersFromIndexedDb, insertDataInIndexedDb } from '../services/dbService';
+import UserForm from './UserForm';
 
 const Home: React.FC = () => {
     const [allUsers, setAllUsers] = useState<any[]>([]);
     const [isModal, setModal] = useState<boolean>(false)
-    const [editUserModal, setEditUserModal] = useState<boolean>(false);
     const [selectedUser, setSelectedUser] = useState<any>(null);
 
     useEffect(() => {
@@ -38,24 +36,22 @@ const Home: React.FC = () => {
 
     const handleEditUserUpdate = () => {
         getAllData();
-        setEditUserModal(false);
+        setModal(false);
     };
 
     const openEditPopup = (user: any) => {
         setSelectedUser(user);
-        setEditUserModal(true);
+        setModal(true);
     };
 
     return (
         <>
-            {isModal && <AddUser isModal={isModal} handleClose={() => setModal(false)} />}
-            {editUserModal && (
-                <EditUser
-                    isModal={editUserModal}
-                    handleClose={() => setEditUserModal(false)}
-                    user={selectedUser}
-                    onUpdate={handleEditUserUpdate} />
-            )}
+          <UserForm
+                isModal={isModal}
+                handleClose={() => setModal(false)}
+                user={selectedUser}
+                onUpdate={handleEditUserUpdate}
+            />
             <div className="row justify-content-center text-center" style={{ padding: 50 }}>
                 <div className="col-md-6">
                     <table className="table table-bordered">
