@@ -82,6 +82,90 @@ export const getAllUsersFromIndexedDb = (): Promise<any[]> => {
   });
 };
 
+export const insertUserInIndexedDb = (userDataToAdd:any) => {
+  return new Promise<void>((resolve, reject) => {
+    if (!idb) {
+      console.log("This browser doesn't support IndexedDB");
+      reject("IndexedDB not supported");
+      return;
+    }
+
+    const request = idb.open("test-db", 1);
+
+    request.onerror = function (event: any) {
+      console.error("An error occurred with IndexedDB");
+      console.error(event);
+      reject("Error opening database");
+    };
+
+    request.onupgradeneeded = function (event: any) {
+      console.log(event);
+      const db = request.result;
+
+      if (!db.objectStoreNames.contains("userData")) {
+        const objectStore = db.createObjectStore("userData", { keyPath: "id" });
+        objectStore.createIndex("age", "age", {
+          unique: false,
+        });
+      }
+    };
+
+    request.onsuccess = function () {
+      const db = request.result;
+      var tx = db.transaction("userData", "readwrite");
+      var userData = tx.objectStore("userData");
+
+      const addRequest = userData.add(userDataToAdd);
+
+      addRequest.onsuccess = () => {
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+      };
+      addRequest.onerror = (error:any) => {
+        reject(error);
+      };
+    };
+  });
+};
+
+export const updateUserInIndexedDb = (userDataToUpdate:any) => {
+  return new Promise<void>((resolve, reject) => {
+    if (!idb) {
+      console.log("This browser doesn't support IndexedDB");
+      reject("IndexedDB not supported");
+      return;
+    }
+
+    const request = idb.open("test-db", 1);
+
+    request.onerror = function (event: any) {
+      console.error("An error occurred with IndexedDB");
+      console.error(event);
+      reject("Error opening database");
+    };
+
+    request.onsuccess = function () {
+      const db = request.result;
+      var tx = db.transaction("userData", "readwrite");
+      var userData = tx.objectStore("userData");
+
+      const updateRequest = userData.put(userDataToUpdate);
+
+      updateRequest.onsuccess = () => {
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+      };
+      updateRequest.onerror = (error:any) => {
+        reject(error);
+      };
+    };
+  });
+};
+
 export const deleteUserFromIndexedDb = (userId: string) => {
   return new Promise<void>((resolve, reject) => {
     const dbPromise = idb.open("test-db", 1);

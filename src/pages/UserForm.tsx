@@ -1,15 +1,7 @@
 import React, { useEffect, useRef, useState, FormEvent } from 'react';
 import Modal from 'react-modal';
 import toast from 'react-hot-toast';
-import { idb } from '../services/idbInterface';
-
-interface UserData {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  age: string;
-}
+import { insertUserInIndexedDb, updateUserInIndexedDb } from '../services/dbService';
 
 interface UserFormProps {
   isModal: boolean;
@@ -62,40 +54,46 @@ const UserForm: React.FC<UserFormProps> = ({ isModal, handleClose, user, onUpdat
   };
 
   const addToDb = () => {
-    const dbPromise = idb.open("test-db", 1);
-
     if (formData.firstName && formData.lastName && formData.email) {
-      dbPromise.onsuccess = () => {
-        const db = dbPromise.result;
-        const tx = db.transaction("userData", "readwrite");
-        const userData = tx.objectStore("userData");
-
-        const userToAdd: UserData = {
-          id: formData.id || generateUniqueId(),
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          age: formData.age,
-        };
-
-        const users = userData.put(userToAdd);
-
-        users.onsuccess = () => {
-          tx.oncomplete = () => {
-            db.close();
-            toast.success(formData.id ? 'User Updated' : 'User Added');
-            setFormData({
-              id: '',
-              firstName: '',
-              lastName: '',
-              age: '',
-              email: '',
-            });
-            onUpdate();
-            handleClose();
-          };
-        };
+      const userData = {
+        id: formData.id || generateUniqueId(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        age: formData.age,
       };
+
+      if (formData.id) {
+        updateUserInIndexedDb(userData).then(() => {
+          toast.success('User Updated');
+          setFormData({
+            id: '',
+            firstName: '',
+            lastName: '',
+            age: '',
+            email: '',
+          });
+          onUpdate();
+          handleClose();
+        }).catch((error) => {
+          console.error(error);
+        });
+      } else {
+        insertUserInIndexedDb(userData).then(() => {
+          toast.success('User Added');
+          setFormData({
+            id: '',
+            firstName: '',
+            lastName: '',
+            age: '',
+            email: '',
+          });
+          onUpdate();
+          handleClose();
+        }).catch((error) => {
+          console.error(error);
+        });
+      }
     } else {
       alert("Please enter all details");
     }
