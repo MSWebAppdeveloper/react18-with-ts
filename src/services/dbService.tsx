@@ -1,8 +1,8 @@
 import { USER_DATA } from "../data";
 import { idb } from "./idbInterface";
 
-export const insertDataInIndexedDb = () => {
-  return new Promise<void>((resolve, reject) => {
+export const insertDataInIndexedDb = async () => {
+  return new Promise<void>(async (resolve, reject) => {
     if (!idb) {
       console.log("This browser doesn't support IndexedDB");
       reject("IndexedDB not supported");
@@ -29,10 +29,10 @@ export const insertDataInIndexedDb = () => {
       }
     };
 
-    request.onsuccess = function () {
+    request.onsuccess = async () => {
       const db = request.result;
-      var tx = db.transaction("userData", "readwrite");
-      var userData = tx.objectStore("userData");
+      const tx = db.transaction("userData", "readwrite");
+      const userData = tx.objectStore("userData");
 
       const dataRequest = userData.getAll();
 
@@ -53,10 +53,11 @@ export const insertDataInIndexedDb = () => {
   });
 };
 
-export const getAllUsersFromIndexedDb = (): Promise<any[]> => {
-  return new Promise((resolve, reject) => {
+export const getAllUsersFromIndexedDb = async (): Promise<any[]> => {
+  return new Promise(async (resolve, reject) => {
     const dbPromise = idb.open("test-db", 1);
-    dbPromise.onsuccess = () => {
+
+    dbPromise.onsuccess = async () => {
       const db = dbPromise.result;
       const tx = db.transaction("userData", "readonly");
       const userData = tx.objectStore("userData");
@@ -82,8 +83,8 @@ export const getAllUsersFromIndexedDb = (): Promise<any[]> => {
   });
 };
 
-export const insertUserInIndexedDb = (userDataToAdd:any) => {
-  return new Promise<void>((resolve, reject) => {
+export const insertUserInIndexedDb = async (userDataToAdd: any) => {
+  return new Promise<void>(async (resolve, reject) => {
     if (!idb) {
       console.log("This browser doesn't support IndexedDB");
       reject("IndexedDB not supported");
@@ -110,10 +111,10 @@ export const insertUserInIndexedDb = (userDataToAdd:any) => {
       }
     };
 
-    request.onsuccess = function () {
+    request.onsuccess = async () => {
       const db = request.result;
-      var tx = db.transaction("userData", "readwrite");
-      var userData = tx.objectStore("userData");
+      const tx = db.transaction("userData", "readwrite");
+      const userData = tx.objectStore("userData");
 
       const addRequest = userData.add(userDataToAdd);
 
@@ -123,15 +124,15 @@ export const insertUserInIndexedDb = (userDataToAdd:any) => {
           resolve();
         };
       };
-      addRequest.onerror = (error:any) => {
+      addRequest.onerror = (error: any) => {
         reject(error);
       };
     };
   });
 };
 
-export const updateUserInIndexedDb = (userDataToUpdate:any) => {
-  return new Promise<void>((resolve, reject) => {
+export const updateUserInIndexedDb = async (userDataToUpdate: any) => {
+  return new Promise<void>(async (resolve, reject) => {
     if (!idb) {
       console.log("This browser doesn't support IndexedDB");
       reject("IndexedDB not supported");
@@ -146,11 +147,12 @@ export const updateUserInIndexedDb = (userDataToUpdate:any) => {
       reject("Error opening database");
     };
 
-    request.onsuccess = function () {
+    request.onsuccess = async () => {
       const db = request.result;
-      var tx = db.transaction("userData", "readwrite");
-      var userData = tx.objectStore("userData");
+      const tx = db.transaction("userData", "readwrite");
+      const userData = tx.objectStore("userData");
 
+      // Update the user in the database
       const updateRequest = userData.put(userDataToUpdate);
 
       updateRequest.onsuccess = () => {
@@ -159,17 +161,17 @@ export const updateUserInIndexedDb = (userDataToUpdate:any) => {
           resolve();
         };
       };
-      updateRequest.onerror = (error:any) => {
+      updateRequest.onerror = (error: any) => {
         reject(error);
       };
     };
   });
 };
 
-export const deleteUserFromIndexedDb = (userId: string) => {
-  return new Promise<void>((resolve, reject) => {
+export const deleteUserFromIndexedDb = async (userId: string) => {
+  return new Promise<void>(async (resolve, reject) => {
     const dbPromise = idb.open("test-db", 1);
-    dbPromise.onsuccess = () => {
+    dbPromise.onsuccess = async () => {
       const db = dbPromise.result;
       const tx = db.transaction("userData", "readwrite");
       const userData = tx.objectStore("userData");
