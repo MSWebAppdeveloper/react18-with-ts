@@ -1,6 +1,6 @@
 {
   "short_name": "React App",
-  "name": "Create React App Sample",
+  "name": "Crud Operation in React using Typescript with indexdDb",
   "icons": [
     {
       "src": "favicon.ico",

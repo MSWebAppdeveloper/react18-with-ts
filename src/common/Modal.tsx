@@ -36,6 +36,7 @@ export const UseModal: React.FC<UseModalProps> = ({ isOpen, closeModal, children
       onRequestClose={closeModal}
       style={customStyles}
       contentLabel="Example Modal"
+      ariaHideApp={false}
     >
       <div  className="d-flex justify-content-end">
         <button className='btn btn-danger m-2' onClick={closeModal}>
